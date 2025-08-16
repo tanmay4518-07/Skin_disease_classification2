@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Results - SkinAI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-animation">
+        <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+            <div class="shape shape-4"></div>
+            <div class="shape shape-5"></div>
+            <div class="shape shape-6"></div>
+        </div>
+        <div class="gradient-overlay"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-microscope"></i>
+                <span>SkinAI</span>
+            </div>
+            <a href="/" class="nav-link">
+                <i class="fas fa-arrow-left"></i>
+                New Analysis
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="result-page">
+            <header class="result-header animate-fade-up">
+                <h1>Diagnostic Results</h1>
+                <p>AI-powered skin condition analysis complete</p>
+            </header>
+
+            <div class="result-content animate-fade-up" style="animation-delay: 0.1s">
+                <div class="result-image-section">
+                    <div class="analyzed-image">
+                        <img src="{{ url_for('static', filename='uploads/' + filename) }}" alt="Analyzed Image" id="analyzedImage">
+                        <div class="image-overlay">
+                            <div class="scan-line"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-details-section">
+                    <div class="diagnosis-card" id="diagnosisCard">
+                        <!-- Dynamically populated by JavaScript -->
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-download" id="downloadBtn">
+                            <i class="fas fa-download"></i>
+                            Download Report
+                        </button>
+                        <button class="btn btn-secondary" onclick="window.location.href='/'">
+                            <i class="fas fa-plus"></i>
+                            New Analysis
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get data from URL parameters or localStorage
+        const urlParams = new URLSearchParams(window.location.search);
+        const resultData = JSON.parse(localStorage.getItem('analysisResult') || '{}');
+
+        if (resultData && Object.keys(resultData).length > 0) {
+            displayResults(resultData);
+        }
+
+        function displayResults(data) {
+            const diagnosisCard = document.getElementById('diagnosisCard');
+            const info = data.info || {};
+
+            diagnosisCard.innerHTML = `
+                <div class="diagnosis-header">
+                    <div class="condition-badge" style="background: ${info.color || '#17a2b8'}">
+                        <i class="fas fa-stethoscope"></i>
+                        <span>${data.prediction}</span>
+                    </div>
+                    <div class="confidence-score">
+                        <div class="confidence-circle">
+                            <svg class="confidence-ring">
+                                <circle class="confidence-ring-bg" cx="50" cy="50" r="45"></circle>
+                                <circle class="confidence-ring-fill" cx="50" cy="50" r="45"
+                                        style="stroke-dasharray: ${(data.confidence / 100) * 283}px 283px"></circle>
+                            </svg>
+                            <span class="confidence-text">${data.confidence}%</span>
+                        </div>
+                        <p>Confidence</p>
+                    </div>
+                </div>
+
+                <div class="diagnosis-content">
+                    <div class="info-section">
+                        <h3><i class="fas fa-info-circle"></i> Description</h3>
+                        <p>${info.description || 'No description available.'}</p>
+                    </div>
+
+                    <div class="info-section">
+                        <h3><i class="fas fa-symptoms"></i> Common Symptoms</h3>
+                        <ul>
+                            ${(info.symptoms || []).map(symptom => `<li>${symptom}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    <div class="info-section">
+                        <h3><i class="fas fa-dna"></i> Possible Causes</h3>
+                        <ul>
+                            ${(info.causes || []).map(cause => `<li>${cause}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    <div class="info-section">
+                        <h3><i class="fas fa-pills"></i> Treatment Options</h3>
+                        <ul>
+                            ${(info.treatment || []).map(treatment => `<li>${treatment}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    <div class="severity-indicator">
+                        <span class="severity-label">Risk Level:</span>
+                        <span class="severity-badge ${getSeverityClass(info.severity)}">${info.severity || 'Unknown'}</span>
+                    </div>
+
+                    <div class="disclaimer">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p><strong>Medical Disclaimer:</strong> This AI analysis is for educational purposes only and should not replace professional medical diagnosis. Please consult a qualified healthcare provider.</p>
+                    </div>
+                </div>
+            `;
+
+            // Setup download button
+            const downloadBtn = document.getElementById('downloadBtn');
+            if (data.report_filename) {
+                downloadBtn.onclick = () => {
+                    window.location.href = `/download_report/${data.report_filename}`;
+                };
+            }
+        }
+
+        function getSeverityClass(severity) {
+            const severityLower = (severity || '').toLowerCase();
+            if (severityLower.includes('low')) return 'severity-low';
+            if (severityLower.includes('moderate') || severityLower.includes('medium')) return 'severity-medium';
+            if (severityLower.includes('high')) return 'severity-high';
+            return 'severity-unknown';
+        }
+    </script>
+</body>
+</html>
